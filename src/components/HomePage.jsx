@@ -1,8 +1,15 @@
 import '../styles/HomePage.css';
 
-function HomePage({ isAdmin, onModeSelect }) {
+function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
   return (
     <div className="map-home">
+      <button
+        className={`admin-toggle ${isAdmin ? 'active' : ''}`}
+        onClick={() => setIsAdmin(!isAdmin)}
+      >
+        {isAdmin ? '🔐 Admin Mode' : '👤 Player Mode'}
+      </button>
+
       <div className="clouds">
         <div className="cloud cloud-1"></div>
         <div className="cloud cloud-2"></div>

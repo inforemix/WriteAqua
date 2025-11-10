@@ -35,10 +35,35 @@
   margin-top: 4px;
 }
 
+.hint-button {
+  padding: 10px 20px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.hint-button:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.hint-button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .puzzle-container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
 }
 
 .puzzle-grid {
@@ -97,6 +122,73 @@
   100% {
     transform: translate(var(--tx), var(--ty)) scale(0);
     opacity: 0;
+  }
+}
+
+/* Hint Overlay */
+.hint-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+  border-radius: 16px;
+}
+
+.hint-image-container {
+  text-align: center;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.hint-image {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+.hint-timer {
+  margin-top: 15px;
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 1.1rem;
+  animation: pulse 1s infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 

@@ -47,16 +47,10 @@ function App() {
 
   return (
     <div className="app">
-      <button
-        className={`admin-toggle ${isAdmin ? 'active' : ''}`}
-        onClick={() => setIsAdmin(!isAdmin)}
-      >
-        {isAdmin ? '🔐 Admin Mode' : '👤 Player Mode'}
-      </button>
-
       {screen === 'home' && (
         <HomePage
           isAdmin={isAdmin}
+          setIsAdmin={setIsAdmin}
           onModeSelect={handleModeSelect}
         />
       )}

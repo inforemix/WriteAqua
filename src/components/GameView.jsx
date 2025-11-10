@@ -7,7 +7,9 @@ function GameView({ stage, onComplete }) {
   const [time, setTime] = useState(0);
   const [isWon, setIsWon] = useState(false);
   const [draggedPiece, setDraggedPiece] = useState(null);
+  const [showHint, setShowHint] = useState(false);
   const timerRef = useRef();
+  const hintTimerRef = useRef();
   const gridSize = stage.mode === 'easy' ? 2 : 3;
   const isDraggable = stage.mode === 'hard';
 
@@ -16,7 +18,12 @@ function GameView({ stage, onComplete }) {
     timerRef.current = setInterval(() => {
       setTime(t => t + 1);
     }, 1000);
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      if (hintTimerRef.current) {
+        clearTimeout(hintTimerRef.current);
+      }
+    };
   }, []);
 
   const initializePuzzle = () => {
@@ -92,9 +99,11 @@ function GameView({ stage, onComplete }) {
     setPieces([...piecesArray]);
   };
 
-  const handleRotate = (index) => {
+  const handleRotate = (originalIndex) => {
     const newPieces = [...pieces];
-    const piece = newPieces[index];
+    // Find the piece by its originalIndex (which never changes)
+    const pieceIndex = newPieces.findIndex(p => p.originalIndex === originalIndex);
+    const piece = newPieces[pieceIndex];
 
     // Update logical rotation (for win condition)
     piece.rotation = (piece.rotation + 90) % 360;
@@ -105,7 +114,11 @@ function GameView({ stage, onComplete }) {
     setPieces(newPieces);
     setMoves(m => m + 1);
     checkWin(newPieces);
-    createParticles(index);
+
+    // Find the visual index for particles (position in sortedPieces)
+    const sortedPieces = [...newPieces].sort((a, b) => a.currentIndex - b.currentIndex);
+    const visualIndex = sortedPieces.findIndex(p => p.originalIndex === originalIndex);
+    createParticles(visualIndex);
   };
 
   const handleDragStart = (index) => {
@@ -131,6 +144,17 @@ function GameView({ stage, onComplete }) {
     setDraggedPiece(null);
     setMoves(m => m + 1);
     checkWin(newPieces);
+  };
+
+  const handleShowHint = () => {
+    if (showHint) return; // Prevent multiple clicks
+
+    setShowHint(true);
+
+    // Hide hint after 3 seconds
+    hintTimerRef.current = setTimeout(() => {
+      setShowHint(false);
+    }, 3000);
   };
 
   const checkWin = (piecesArray) => {
@@ -294,8 +318,13 @@ function GameView({ stage, onComplete }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button className="back-button" onClick={onComplete}>← Back</button>
           <h2 style={{ fontSize: '1.3rem', fontWeight: '700' }}>{stage.name}</h2>
-          <div className={`difficulty-badge ${stage.mode}`}>
-            {stage.mode === 'easy' ? '2×2' : '3×3'}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button className="hint-button" onClick={handleShowHint} disabled={showHint || isWon}>
+              💡 Hint
+            </button>
+            <div className={`difficulty-badge ${stage.mode}`}>
+              {stage.mode === 'easy' ? '2×2' : '3×3'}
+            </div>
           </div>
         </div>
 
@@ -327,7 +356,7 @@ function GameView({ stage, onComplete }) {
                 backgroundImage: `url(${piece.image})`,
                 transform: `rotate(${piece.displayRotation}deg)`
               }}
-              onClick={() => handleRotate(index)}
+              onClick={() => handleRotate(piece.originalIndex)}
               draggable={isDraggable}
               onDragStart={() => handleDragStart(piece.currentIndex)}
               onDragOver={handleDragOver}
@@ -335,6 +364,15 @@ function GameView({ stage, onComplete }) {
             />
           ))}
         </div>
+
+        {showHint && (
+          <div className="hint-overlay">
+            <div className="hint-image-container">
+              <img src={stage.image} alt="Hint" className="hint-image" />
+              <div className="hint-timer">Hint will hide in 3s...</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {isWon && (
