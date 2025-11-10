@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puzzle Quest - Map Edition</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #87CEEB;
+      color: #111827;
+      line-height: 1.5;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    /* Map Homepage Styles */
+    .map-home {
+      position: relative;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 100%);
+      overflow: hidden;
+    }
+
+    .clouds {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 300px;
+      pointer-events: none;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 100px;
+      opacity: 0.8;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 100px;
+    }
+
+    .cloud-1 {
+      width: 100px;
+      height: 40px;
+      top: 50px;
+      left: -100px;
+      animation-delay: 0s;
+      animation-duration: 25s;
+    }
+
+    .cloud-1::before {
+      width: 50px;
+      height: 40px;
+      top: -20px;
+      left: 25px;
+    }
+
+    .cloud-1::after {
+      width: 60px;
+      height: 35px;
+      top: -10px;
+      right: 20px;
+    }
+
+    .cloud-2 {
+      width: 120px;
+      height: 45px;
+      top: 120px;
+      left: -120px;
+      animation-delay: 8s;
+      animation-duration: 30s;
+    }
+
+    .cloud-2::before {
+      width: 55px;
+      height: 45px;
+      top: -22px;
+      left: 30px;
+    }
+
+    .cloud-2::after {
+      width: 65px;
+      height: 40px;
+      top: -15px;
+      right: 25px;
+    }
+
+    .cloud-3 {
+      width: 90px;
+      height: 35px;
+      top: 200px;
+      left: -90px;
+      animation-delay: 15s;
+      animation-duration: 22s;
+    }
+
+    .cloud-3::before {
+      width: 45px;
+      height: 35px;
+      top: -18px;
+      left: 20px;
+    }
+
+    .cloud-3::after {
+      width: 50px;
+      height: 30px;
+      top: -12px;
+      right: 15px;
+    }
+
+    @keyframes float {
+      0% {
+        left: -150px;
+      }
+      100% {
+        left: 100%;
+      }
+    }
+
+    .game-title {
+      text-align: center;
+      padding: 60px 20px 40px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .game-title h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      color: white;
+      text-shadow: 
+        -3px -3px 0 #1e40af,
+        3px -3px 0 #1e40af,
+        -3px 3px 0 #1e40af,
+        3px 3px 0 #1e40af,
+        0 6px 20px rgba(0,0,0,0.3);
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+
+    .game-title p {
+      font-size: 1.1rem;
+      color: #1e40af;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+    }
+
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .mode-node {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .mode-node:hover {
+      transform: translateY(-10px);
+    }
+
+    .node-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: 5px solid white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2), 0 0 0 5px rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .mode-node:nth-child(2) .node-circle {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2), 0 0 0 5px rgba(245, 158, 11, 0.3);
+      animation-delay: 0.3s;
+    }
+
+    .mode-label {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .admin-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 12px 24px;
+      background: white;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #10b981;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+    }
+
+    .admin-toggle:hover {
+      background: #10b981;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .admin-toggle.active {
+      background: #10b981;
+      color: white;
+    }
+
+    /* Map View Styles */
+    .map-view {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #87CEEB 0%, #90EE90 100%);
+      padding: 20px;
+      padding-bottom: 80px;
+    }
+
+    .map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .back-button {
+      padding: 10px 20px;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .back-button:hover {
+      background: #e5e7eb;
+      transform: translateY(-2px);
+    }
+
+    .add-button {
+      padding: 12px 24px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s;
+    }
+
+    .add-button:hover {
+      background: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .map-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .map-path {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #D2691E;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    .stage-card {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 100px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 2;
+      max-width: 350px;
+    }
+
+    .stage-card:nth-child(odd) {
+      margin-left: 0;
+      margin-right: auto;
+    }
+
+    .stage-card:nth-child(even) {
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    .stage-preview {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
+
+    .stage-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .stage-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .difficulty-badge {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .difficulty-badge.easy {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .difficulty-badge.hard {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .stage-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .play-button, .delete-button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .play-button {
+      background: #10b981;
+      color: white;
+    }
+
+    .play-button:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+
+    .delete-button {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .delete-button:hover {
+      background: #fecaca;
+      transform: translateY(-2px);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .close-button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f3f4f6;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .close-button:hover {
+      background: #e5e7eb;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+
+    .form-select:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-input {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-weight: 600;
+      color: #065f46;
+      cursor: pointer;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-button {
+      width: 100%;
+      padding: 12px;
+      background: #f3f4f6;
+      border: 2px dashed #9ca3af;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .file-input-button:hover {
+      background: #e5e7eb;
+      border-color: #6b7280;
+    }
+
+    .file-input {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .image-preview {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      object-fit: cover;
+      margin-top: 15px;
+      border: 2px solid #e5e7eb;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .cancel-button, .save-button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cancel-button {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .cancel-button:hover {
+      background: #e5e7eb;
+    }
+
+    .save-button {
+      background: #10b981;
+      color: white;
+    }
+
+    .save-button:hover {
+      background: #059669;
+    }
+
+    .save-button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+
+    /* Game View Styles */
+    .game-view {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      position: relative;
+    }
+
+    .game-header {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .puzzle-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .puzzle-grid {
+      display: grid;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .puzzle-grid.easy {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .puzzle-grid.hard {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .puzzle-piece {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .puzzle-piece:hover {
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .puzzle-piece.correct {
+      box-shadow: 0 0 0 3px #10b981;
+    }
+
+    .puzzle-piece.dragging {
+      opacity: 0.5;
+      cursor: move;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: particleBurst 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes particleBurst {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Win Modal */
+    .win-modal {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border-radius: 16px;
+      padding: 30px 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      z-index: 3000;
+      text-align: center;
+      animation: slideDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateX(-50%) translateY(-100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .win-emoji {
+      font-size: 4rem;
+      margin-bottom: 15px;
+    }
+
+    .win-title {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    .win-stats {
+      display: flex;
+      justify-content: space-around;
+      gap: 30px;
+      margin: 20px 0;
+    }
+
+    .win-stat {
+      text-align: center;
+    }
+
+    .win-stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .win-stat-label {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .pb-indicator {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+      display: inline-block;
+    }
+
+    .win-button {
+      width: 100%;
+      padding: 14px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.2s;
+    }
+
+    .win-button:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2999;
+      transition: opacity 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ==================== MAIN APP ====================
+    function App() {
+      const [screen, setScreen] = useState('home');
+      const [isAdmin, setIsAdmin] = useState(false);
+      const [selectedMode, setSelectedMode] = useState(null);
+      const [stages, setStages] = useState([]);
+      const [currentStage, setCurrentStage] = useState(null);
+
+      useEffect(() => {
+        const saved = localStorage.getItem('stages');
+        if (saved) {
+          setStages(JSON.parse(saved));
+        }
+      }, []);
+
+      const saveStages = (newStages) => {
+        setStages(newStages);
+        localStorage.setItem('stages', JSON.stringify(newStages));
+      };
+
+      const handleModeSelect = (mode) => {
+        setSelectedMode(mode);
+        setScreen('map');
+      };
+
+      const handlePlayStage = (stage) => {
+        setCurrentStage(stage);
+        setScreen('game');
+      };
+
+      const handleDeleteStage = (stageId) => {
+        if (confirm('Delete this stage?')) {
+          const newStages = stages.filter(s => s.id !== stageId);
+          saveStages(newStages);
+        }
+      };
+
+      const handleGameComplete = () => {
+        setScreen('map');
+        setCurrentStage(null);
+      };
+
+      return (
+        <div className="app">
+          <button 
+            className={`admin-toggle ${isAdmin ? 'active' : ''}`}
+            onClick={() => setIsAdmin(!isAdmin)}
+          >
+            {isAdmin ? '🔐 Admin Mode' : '👤 Player Mode'}
+          </button>
+
+          {screen === 'home' && (
+            <HomePage
+              isAdmin={isAdmin}
+              onModeSelect={handleModeSelect}
+            />
+          )}
+
+          {screen === 'map' && (
+            <MapView
+              mode={selectedMode}
+              stages={stages}
+              isAdmin={isAdmin}
+              onBack={() => setScreen('home')}
+              onPlayStage={handlePlayStage}
+              onDeleteStage={handleDeleteStage}
+              onStagesUpdate={saveStages}
+            />
+          )}
+
+          {screen === 'game' && currentStage && (
+            <GameView
+              stage={currentStage}
+              onComplete={handleGameComplete}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ==================== HOME PAGE ====================
+    function HomePage({ isAdmin, onModeSelect }) {
+      return (
+        <div className="map-home">
+          <div className="clouds">
+            <div className="cloud cloud-1"></div>
+            <div className="cloud cloud-2"></div>
+            <div className="cloud cloud-3"></div>
+          </div>
+
+          <div className="game-title">
+            <h1>PUZZLE QUEST</h1>
+            <p>Choose Your Adventure</p>
+          </div>
+
+          <div className="mode-selector">
+            <div className="mode-node" onClick={() => onModeSelect('easy')}>
+              <div className="node-circle">🌟</div>
+              <div className="mode-label">Easy Mode</div>
+            </div>
+
+            <div className="mode-node" onClick={() => onModeSelect('hard')}>
+              <div className="node-circle">🔥</div>
+              <div className="mode-label">Hard Mode</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== MAP VIEW ====================
+    function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, onStagesUpdate }) {
+      const [showUploadModal, setShowUploadModal] = useState(false);
+
+      const filteredStages = stages.filter(s => s.mode === mode);
+
+      const handleAddStage = () => {
+        setShowUploadModal(true);
+      };
+
+      const handleSaveStage = (stageData) => {
+        const newStages = [...stages];
+        
+        if (stageData.applyToBoth) {
+          // Create both Easy and Hard stages
+          const easyStage = {
+            id: Date.now(),
+            name: stageData.name,
+            image: stageData.image,
+            mode: 'easy'
+          };
+          
+          const hardStage = {
+            id: Date.now() + 1,
+            name: stageData.name,
+            image: stageData.image,
+            mode: 'hard'
+          };
+          
+          newStages.push(easyStage, hardStage);
+        } else {
+          // Create single stage
+          const newStage = {
+            id: Date.now(),
+            name: stageData.name,
+            image: stageData.image,
+            mode: stageData.mode
+          };
+          newStages.push(newStage);
+        }
+        
+        onStagesUpdate(newStages);
+        setShowUploadModal(false);
+      };
+
+      return (
+        <div className="map-view">
+          <div className="map-header">
+            <button className="back-button" onClick={onBack}>
+              ← Back to Home
+            </button>
+            <h2 style={{fontSize: '1.5rem', fontWeight: '700'}}>
+              {mode === 'easy' ? '🌟 Easy' : '🔥 Hard'} Stages
+            </h2>
+            {isAdmin && (
+              <button className="add-button" onClick={handleAddStage}>
+                + Add Stage
+              </button>
+            )}
+          </div>
+
+          <div className="map-container">
+            <div className="map-path"></div>
+            
+            {filteredStages.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">🗺️</div>
+                <h3>No Stages Yet</h3>
+                <p>{isAdmin ? 'Click "+ Add Stage" to create one!' : 'Ask admin to add stages!'}</p>
+              </div>
+            ) : (
+              filteredStages.map((stage, index) => (
+                <div key={stage.id} className="stage-card">
+                  <img src={stage.image} alt={stage.name} className="stage-preview" />
+                  <div className="stage-info">
+                    <div className="stage-name">{stage.name}</div>
+                    <div className={`difficulty-badge ${stage.mode}`}>
+                      {stage.mode === 'easy' ? '2×2' : '3×3'}
+                    </div>
+                  </div>
+                  <div className="stage-actions">
+                    <button className="play-button" onClick={() => onPlayStage(stage)}>
+                      ▶ Play
+                    </button>
+                    {isAdmin && (
+                      <button className="delete-button" onClick={() => onDeleteStage(stage.id)}>
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {showUploadModal && (
+            <UploadModal
+              defaultMode={mode}
+              onClose={() => setShowUploadModal(false)}
+              onSave={handleSaveStage}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ==================== UPLOAD MODAL ====================
+    function UploadModal({ defaultMode, onClose, onSave }) {
+      const [stageName, setStageName] = useState('');
+      const [selectedMode, setSelectedMode] = useState(defaultMode);
+      const [image, setImage] = useState(null);
+      const [applyToBoth, setApplyToBoth] = useState(false);
+      const fileInputRef = useRef();
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setImage(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleSave = () => {
+        if (!stageName || !image) {
+          alert('Please fill in all fields');
+          return;
+        }
+
+        onSave({
+          name: stageName,
+          image: image,
+          mode: selectedMode,
+          applyToBoth: applyToBoth
+        });
+      };
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Create New Stage</h2>
+              <button className="close-button" onClick={onClose}>×</button>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Stage Name</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter stage name..."
+                value={stageName}
+                onChange={(e) => setStageName(e.target.value)}
+              />
+            </div>
+
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="applyToBoth"
+                className="checkbox-input"
+                checked={applyToBoth}
+                onChange={(e) => setApplyToBoth(e.target.checked)}
+              />
+              <label htmlFor="applyToBoth" className="checkbox-label">
+                ✨ Apply to both Easy & Hard
+              </label>
+            </div>
+
+            {!applyToBoth && (
+              <div className="form-group">
+                <label className="form-label">Difficulty</label>
+                <select
+                  className="form-select"
+                  value={selectedMode}
+                  onChange={(e) => setSelectedMode(e.target.value)}
+                >
+                  <option value="easy">Easy (2×2)</option>
+                  <option value="hard">Hard (3×3)</option>
+                </select>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label">Upload Image</label>
+              <div className="file-input-wrapper">
+                <div className="file-input-button" onClick={() => fileInputRef.current?.click()}>
+                  {image ? '✓ Image Selected' : '📁 Choose Image'}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="file-input"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+              </div>
+              {image && <img src={image} alt="Preview" className="image-preview" />}
+            </div>
+
+            <div className="modal-actions">
+              <button className="cancel-button" onClick={onClose}>Cancel</button>
+              <button className="save-button" onClick={handleSave} disabled={!stageName || !image}>
+                Save Stage
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== GAME VIEW ====================
+    function GameView({ stage, onComplete }) {
+      const [pieces, setPieces] = useState([]);
+      const [moves, setMoves] = useState(0);
+      const [time, setTime] = useState(0);
+      const [isWon, setIsWon] = useState(false);
+      const [draggedPiece, setDraggedPiece] = useState(null);
+      const timerRef = useRef();
+      const gridSize = stage.mode === 'easy' ? 2 : 3;
+      const isDraggable = stage.mode === 'hard';
+
+      useEffect(() => {
+        initializePuzzle();
+        timerRef.current = setInterval(() => {
+          setTime(t => t + 1);
+        }, 1000);
+        return () => clearInterval(timerRef.current);
+      }, []);
+
+      const initializePuzzle = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          
+          const pieceWidth = canvas.width / gridSize;
+          const pieceHeight = canvas.height / gridSize;
+          const newPieces = [];
+          
+          for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+              const pieceCanvas = document.createElement('canvas');
+              pieceCanvas.width = pieceWidth;
+              pieceCanvas.height = pieceHeight;
+              const pieceCtx = pieceCanvas.getContext('2d');
+              
+              pieceCtx.drawImage(
+                canvas,
+                col * pieceWidth,
+                row * pieceHeight,
+                pieceWidth,
+                pieceHeight,
+                0,
+                0,
+                pieceWidth,
+                pieceHeight
+              );
+              
+              const index = row * gridSize + col;
+              newPieces.push({
+                image: pieceCanvas.toDataURL(),
+                originalIndex: index,
+                currentIndex: index,
+                rotation: 0,
+                displayRotation: 0
+              });
+            }
+          }
+          
+          scramblePuzzle(newPieces);
+        };
+        
+        img.src = stage.image;
+      };
+
+      const scramblePuzzle = (piecesArray) => {
+        // Scramble rotations with clockwise-only display
+        piecesArray.forEach(piece => {
+          const rotation = [90, 180, 270][Math.floor(Math.random() * 3)];
+          piece.rotation = rotation;
+          piece.displayRotation = rotation;
+        });
+        
+        // Scramble positions for hard mode
+        if (isDraggable) {
+          const indices = piecesArray.map((_, i) => i);
+          for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+          }
+          piecesArray.forEach((piece, i) => {
+            piece.currentIndex = indices[i];
+          });
+        }
+        
+        setPieces([...piecesArray]);
+      };
+
+      const handleRotate = (index) => {
+        const newPieces = [...pieces];
+        const piece = newPieces[index];
+        
+        // Update logical rotation (for win condition)
+        piece.rotation = (piece.rotation + 90) % 360;
+        
+        // Update display rotation (always clockwise, no wrap)
+        piece.displayRotation = piece.displayRotation + 90;
+        
+        setPieces(newPieces);
+        setMoves(m => m + 1);
+        checkWin(newPieces);
+        createParticles(index);
+      };
+
+      const handleDragStart = (index) => {
+        if (!isDraggable) return;
+        setDraggedPiece(index);
+      };
+
+      const handleDragOver = (e) => {
+        e.preventDefault();
+      };
+
+      const handleDrop = (targetIndex) => {
+        if (!isDraggable || draggedPiece === null) return;
+        
+        const newPieces = [...pieces];
+        const draggedIdx = newPieces.findIndex(p => p.currentIndex === draggedPiece);
+        const targetIdx = newPieces.findIndex(p => p.currentIndex === targetIndex);
+        
+        [newPieces[draggedIdx].currentIndex, newPieces[targetIdx].currentIndex] = 
+        [newPieces[targetIdx].currentIndex, newPieces[draggedIdx].currentIndex];
+        
+        setPieces(newPieces);
+        setDraggedPiece(null);
+        setMoves(m => m + 1);
+        checkWin(newPieces);
+      };
+
+      const checkWin = (piecesArray) => {
+        const isCorrect = piecesArray.every(piece => 
+          piece.rotation === 0 && piece.currentIndex === piece.originalIndex
+        );
+        
+        if (isCorrect && !isWon) {
+          clearInterval(timerRef.current);
+          setIsWon(true);
+          showConfetti();
+          
+          const key = `pb-${stage.mode}-${stage.id}`;
+          const pb = localStorage.getItem(key);
+          if (!pb || time < parseInt(pb)) {
+            localStorage.setItem(key, time.toString());
+          }
+        }
+      };
+
+      const createParticles = (index) => {
+        const piece = document.querySelectorAll('.puzzle-piece')[index];
+        if (!piece) return;
+        
+        const rect = piece.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.cssText = `
+            position: fixed;
+            left: ${centerX}px;
+            top: ${centerY}px;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            --tx: ${(Math.random() - 0.5) * 100}px;
+            --ty: ${(Math.random() - 0.5) * 100}px;
+          `;
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 800);
+        }
+      };
+
+      const showConfetti = () => {
+        const canvas = document.getElementById('confetti-canvas');
+        if (!canvas) return;
+        
+        canvas.style.display = 'block';
+        canvas.style.opacity = '1';
+        
+        const gl = canvas.getContext('webgl');
+        if (!gl) return;
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, `
+          attribute vec2 position;
+          void main() {
+            gl_Position = vec4(position, 0.0, 1.0);
+          }
+        `);
+        gl.compileShader(vertexShader);
+        
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, `
+          precision mediump float;
+          uniform vec2 resolution;
+          uniform float time;
+          
+          float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+          }
+          
+          void main() {
+            vec2 uv = gl_FragCoord.xy / resolution.xy;
+            float t = time * 0.5;
+            vec2 pos = vec2(uv.x * 20.0, uv.y * 20.0 + t * 5.0);
+            float noise = random(floor(pos));
+            
+            vec2 cellPos = fract(pos);
+            float confetti = 0.0;
+            
+            if (noise > 0.7) {
+              float d = length(cellPos - vec2(0.5));
+              confetti = smoothstep(0.3, 0.1, d);
+              
+              vec3 color = vec3(
+                0.5 + 0.5 * sin(noise * 10.0),
+                0.5 + 0.5 * sin(noise * 15.0 + 2.0),
+                0.5 + 0.5 * sin(noise * 20.0 + 4.0)
+              );
+              
+              float fade = smoothstep(3.0, 0.0, t);
+              gl_FragColor = vec4(color * confetti * fade, confetti * fade);
+            } else {
+              gl_FragColor = vec4(0.0);
+            }
+          }
+        `);
+        gl.compileShader(fragmentShader);
+        
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        gl.useProgram(program);
+        
+        const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+        
+        const positionLocation = gl.getAttribLocation(program, 'position');
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        
+        const resolutionLocation = gl.getUniformLocation(program, 'resolution');
+        const timeLocation = gl.getUniformLocation(program, 'time');
+        
+        gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+        
+        const startTime = Date.now();
+        function render() {
+          const currentTime = (Date.now() - startTime) / 1000;
+          gl.uniform1f(timeLocation, currentTime);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          
+          if (currentTime < 3.0) {
+            requestAnimationFrame(render);
+          } else {
+            canvas.style.opacity = '0';
+            setTimeout(() => {
+              canvas.style.display = 'none';
+            }, 500);
+          }
+        }
+        render();
+      };
+
+      const sortedPieces = [...pieces].sort((a, b) => a.currentIndex - b.currentIndex);
+
+      const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+      };
+
+      const pb = localStorage.getItem(`pb-${stage.mode}-${stage.id}`);
+      const isNewPB = isWon && (!pb || time < parseInt(pb));
+
+      return (
+        <div className="game-view">
+          <canvas id="confetti-canvas"></canvas>
+          
+          <div className="game-header">
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <button className="back-button" onClick={onComplete}>← Back</button>
+              <h2 style={{fontSize: '1.3rem', fontWeight: '700'}}>{stage.name}</h2>
+              <div className={`difficulty-badge ${stage.mode}`}>
+                {stage.mode === 'easy' ? '2×2' : '3×3'}
+              </div>
+            </div>
+            
+            <div className="game-stats">
+              <div className="stat">
+                <div className="stat-value">{formatTime(time)}</div>
+                <div className="stat-label">Time</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">{moves}</div>
+                <div className="stat-label">Moves</div>
+              </div>
+              {pb && (
+                <div className="stat">
+                  <div className="stat-value">{formatTime(parseInt(pb))}</div>
+                  <div className="stat-label">Best</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="puzzle-container">
+            <div className={`puzzle-grid ${stage.mode}`}>
+              {sortedPieces.map((piece, index) => (
+                <div
+                  key={index}
+                  className={`puzzle-piece ${piece.rotation === 0 && piece.currentIndex === piece.originalIndex ? 'correct' : ''}`}
+                  style={{
+                    backgroundImage: `url(${piece.image})`,
+                    transform: `rotate(${piece.displayRotation}deg)`
+                  }}
+                  onClick={() => handleRotate(index)}
+                  draggable={isDraggable}
+                  onDragStart={() => handleDragStart(piece.currentIndex)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(piece.currentIndex)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {isWon && (
+            <div className="win-modal">
+              <div className="win-emoji">🎉</div>
+              <div className="win-title">Puzzle Complete!</div>
+              <div className="win-stats">
+                <div className="win-stat">
+                  <div className="win-stat-value">{formatTime(time)}</div>
+                  <div className="win-stat-label">Time</div>
+                </div>
+                <div className="win-stat">
+                  <div className="win-stat-value">{moves}</div>
+                  <div className="win-stat-label">Moves</div>
+                </div>
+              </div>
+              {isNewPB && <div className="pb-indicator">🏆 New Personal Best!</div>}
+              <button className="win-button" onClick={onComplete}>Continue</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ==================== RENDER APP ====================
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
