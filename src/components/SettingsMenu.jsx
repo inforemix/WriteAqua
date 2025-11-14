@@ -8,6 +8,7 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('language') || 'en';
   });
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Sync state when menu opens
   useEffect(() => {
@@ -37,6 +38,37 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
     setLanguage(lang);
     localStorage.setItem('language', lang);
     // In a real app, this would trigger i18n language change
+  };
+
+  const handleResetProgress = () => {
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetProgress = () => {
+    // Remove all completed stage data and personal bests
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('completed-') || key.startsWith('pb-')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    setShowResetConfirm(false);
+
+    // Play click sound
+    soundManager.playClick();
+
+    // Close settings and reload to show reset progress
+    setTimeout(() => {
+      onClose();
+      window.location.reload();
+    }, 300);
+  };
+
+  const cancelResetProgress = () => {
+    setShowResetConfirm(false);
   };
 
   if (!isOpen) return null;
@@ -117,14 +149,6 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
               </button>
 
               <button
-                className={`language-btn ${language === 'zh' ? 'active' : ''}`}
-                onClick={() => handleLanguageChange('zh')}
-              >
-                <span className="language-flag">🇨🇳</span>
-                <span className="language-name">中文</span>
-              </button>
-
-              <button
                 className={`language-btn ${language === 'zh-tw' ? 'active' : ''}`}
                 onClick={() => handleLanguageChange('zh-tw')}
               >
@@ -133,7 +157,43 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
               </button>
             </div>
           </div>
+
+          {/* Admin Section - Reset Progress */}
+          {isAdmin && (
+            <div className="settings-section danger-section">
+              <h3 className="section-title">Admin Actions</h3>
+
+              <div className="setting-item">
+                <button className="reset-progress-btn" onClick={handleResetProgress}>
+                  🗑️ Reset All Progress
+                </button>
+                <p className="reset-warning">This will clear all completed stages and personal bests</p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Reset Confirmation Modal */}
+        {showResetConfirm && (
+          <div className="confirm-overlay">
+            <div className="confirm-modal">
+              <div className="confirm-icon">⚠️</div>
+              <h3 className="confirm-title">Reset All Progress?</h3>
+              <p className="confirm-text">
+                This will permanently delete all completed stages and personal best times.
+                This action cannot be undone.
+              </p>
+              <div className="confirm-actions">
+                <button className="confirm-cancel" onClick={cancelResetProgress}>
+                  Cancel
+                </button>
+                <button className="confirm-delete" onClick={confirmResetProgress}>
+                  Reset Progress
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

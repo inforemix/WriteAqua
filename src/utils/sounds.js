@@ -152,12 +152,13 @@ class SoundManager {
       this.init();
       if (!this.audioContext) return;
 
-      // Victory fanfare
+      // Exciting victory fanfare with more energy
       const melody = [
-        { freq: 523.25, time: 0 },    // C
-        { freq: 659.25, time: 0.15 },  // E
-        { freq: 783.99, time: 0.3 },   // G
-        { freq: 1046.5, time: 0.45 }   // C (high)
+        { freq: 523.25, time: 0, duration: 0.15 },      // C
+        { freq: 659.25, time: 0.1, duration: 0.15 },    // E
+        { freq: 783.99, time: 0.2, duration: 0.2 },     // G
+        { freq: 1046.5, time: 0.35, duration: 0.3 },    // C (high)
+        { freq: 1318.5, time: 0.6, duration: 0.4 }      // E (very high)
       ];
 
       melody.forEach(note => {
@@ -167,16 +168,100 @@ class SoundManager {
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
 
+        // Use triangle wave for a brighter, more cheerful sound
+        oscillator.type = 'triangle';
         oscillator.frequency.setValueAtTime(note.freq, this.audioContext.currentTime + note.time);
 
-        gainNode.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime + note.time);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.time + 0.4);
+        gainNode.gain.setValueAtTime(this.volume * 0.35, this.audioContext.currentTime + note.time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.time + note.duration);
 
         oscillator.start(this.audioContext.currentTime + note.time);
-        oscillator.stop(this.audioContext.currentTime + note.time + 0.4);
+        oscillator.stop(this.audioContext.currentTime + note.time + note.duration);
       });
+
+      // Add "yeah!" voice-like sound using multiple oscillators
+      setTimeout(() => {
+        this.playYeahSound();
+      }, 200);
+
     } catch (error) {
       console.error('Error playing win sound:', error);
+    }
+  }
+
+  playYeahSound() {
+    if (!this.enabled) return;
+    try {
+      if (!this.audioContext) return;
+
+      // Create a "yeah!" sound by combining multiple frequencies
+      // Simulating vowel formants for a voice-like "yeah" sound
+      const formants = [
+        { freq: 700, gain: 0.3 },   // First formant
+        { freq: 1220, gain: 0.2 },  // Second formant
+        { freq: 2600, gain: 0.15 }  // Third formant
+      ];
+
+      formants.forEach(formant => {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        // Use sawtooth for more harmonics
+        oscillator.type = 'sawtooth';
+
+        // Sweep frequency to create "yeah" sound
+        oscillator.frequency.setValueAtTime(formant.freq * 0.7, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(formant.freq, this.audioContext.currentTime + 0.1);
+        oscillator.frequency.exponentialRampToValueAtTime(formant.freq * 0.9, this.audioContext.currentTime + 0.3);
+
+        // Bandpass filter to shape the sound
+        filter.type = 'bandpass';
+        filter.frequency.value = formant.freq;
+        filter.Q.value = 5;
+
+        // Envelope for natural "yeah" articulation
+        gainNode.gain.setValueAtTime(0.01, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(this.volume * formant.gain, this.audioContext.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(this.volume * formant.gain, this.audioContext.currentTime + 0.15);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + 0.4);
+      });
+
+      // Add noise burst for consonant "y" sound
+      const bufferSize = this.audioContext.sampleRate * 0.05;
+      const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.1;
+      }
+
+      const noise = this.audioContext.createBufferSource();
+      const noiseGain = this.audioContext.createGain();
+      const noiseFilter = this.audioContext.createBiquadFilter();
+
+      noise.buffer = buffer;
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.audioContext.destination);
+
+      noiseFilter.type = 'highpass';
+      noiseFilter.frequency.value = 2000;
+
+      noiseGain.gain.setValueAtTime(this.volume * 0.15, this.audioContext.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
+
+      noise.start(this.audioContext.currentTime);
+
+    } catch (error) {
+      console.error('Error playing yeah sound:', error);
     }
   }
 

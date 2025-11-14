@@ -13,6 +13,7 @@ function GameView({ stage, onComplete }) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [timeExpired, setTimeExpired] = useState(false);
   const [justDropped, setJustDropped] = useState(false);
+  const [hintCount, setHintCount] = useState(0);
   const timerRef = useRef();
   const hintTimerRef = useRef();
   const dropTimeoutRef = useRef();
@@ -131,7 +132,7 @@ function GameView({ stage, onComplete }) {
   };
 
   const handleRotate = (originalIndex, event) => {
-    // Prevent rotation if currently dragging or just dropped
+    // Prevent rotation while dragging or just dropped
     if (draggedPiece !== null || justDropped) {
       event?.preventDefault();
       event?.stopPropagation();
@@ -146,8 +147,8 @@ function GameView({ stage, onComplete }) {
     // Update logical rotation (for win condition) - clockwise only (+90 degrees)
     piece.rotation = (piece.rotation + 90) % 360;
 
-    // Update display rotation (use modulo to prevent accumulation) - clockwise only (+90 degrees)
-    piece.displayRotation = (piece.displayRotation + 90) % 360;
+    // Update display rotation (continuous clockwise, no reset)
+    piece.displayRotation = piece.displayRotation + 90;
 
     setPieces(newPieces);
     setMoves(m => m + 1);
@@ -155,11 +156,6 @@ function GameView({ stage, onComplete }) {
 
     // Play rotation sound
     soundManager.playRotate();
-
-    // Find the visual index for particles (position in sortedPieces)
-    const sortedPieces = [...newPieces].sort((a, b) => a.currentIndex - b.currentIndex);
-    const visualIndex = sortedPieces.findIndex(p => p.originalIndex === originalIndex);
-    createParticles(visualIndex);
   };
 
   const handleRestartPuzzle = () => {
@@ -248,9 +244,10 @@ function GameView({ stage, onComplete }) {
   };
 
   const handleShowHint = () => {
-    if (showHint) return; // Prevent multiple clicks
+    if (showHint || hintCount >= 2) return; // Prevent multiple clicks and limit to 2 hints
 
     setShowHint(true);
+    setHintCount(hintCount + 1);
 
     // Hide hint after 3 seconds
     hintTimerRef.current = setTimeout(() => {
@@ -293,44 +290,40 @@ function GameView({ stage, onComplete }) {
     }
   };
 
-  const createParticles = (index) => {
-    const piece = document.querySelectorAll('.puzzle-piece')[index];
-    if (!piece) return;
-
-    const rect = piece.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    for (let i = 0; i < 8; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      particle.style.cssText = `
-        position: fixed;
-        left: ${centerX}px;
-        top: ${centerY}px;
-        width: 8px;
-        height: 8px;
-        background: #10b981;
-        --tx: ${(Math.random() - 0.5) * 100}px;
-        --ty: ${(Math.random() - 0.5) * 100}px;
-      `;
-      document.body.appendChild(particle);
-      setTimeout(() => particle.remove(), 800);
-    }
-  };
-
   const showConfetti = () => {
     const canvas = document.getElementById('confetti-canvas');
     if (!canvas) return;
 
+    // Force transparent background on canvas element
     canvas.style.display = 'block';
     canvas.style.opacity = '1';
+    canvas.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+    canvas.style.background = 'none';
 
-    const gl = canvas.getContext('webgl');
-    if (!gl) return;
+    // Get WebGL context with alpha channel enabled
+    const gl = canvas.getContext('webgl', {
+      alpha: true,
+      premultipliedAlpha: false,
+      antialias: true,
+      preserveDrawingBuffer: false,
+      stencil: false,
+      depth: false
+    });
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    if (!gl) {
+      console.error('WebGL not supported');
+      return;
+    }
+
+    // Set canvas to window size
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    console.log('Canvas initialized:', width, height);
 
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, `
@@ -348,41 +341,128 @@ function GameView({ stage, onComplete }) {
       uniform float time;
 
       float random(vec2 st) {
-        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
       }
 
       void main() {
         vec2 uv = gl_FragCoord.xy / resolution.xy;
-        float t = time * 0.5;
-        vec2 pos = vec2(uv.x * 20.0, uv.y * 20.0 + t * 5.0);
-        float noise = random(floor(pos));
+        vec3 finalColor = vec3(0.0);
 
-        vec2 cellPos = fract(pos);
-        float confetti = 0.0;
+        // Create 80 confetti pieces
+        for(float i = 0.0; i < 80.0; i += 1.0) {
+          vec2 seed = vec2(i * 0.123, i * 0.456);
+          float id = random(seed);
 
-        if (noise > 0.7) {
-          float d = length(cellPos - vec2(0.5));
-          confetti = smoothstep(0.3, 0.1, d);
+          // Starting position (spread across top)
+          float startX = random(seed + vec2(1.0, 0.0));
+          float startY = -0.2 - random(seed + vec2(2.0, 0.0)) * 0.3;
 
-          vec3 color = vec3(
-            0.5 + 0.5 * sin(noise * 10.0),
-            0.5 + 0.5 * sin(noise * 15.0 + 2.0),
-            0.5 + 0.5 * sin(noise * 20.0 + 4.0)
+          // Falling speed with variation - SUPER FAST!
+          float fallSpeed = 0.5 + random(seed + vec2(3.0, 0.0)) * 0.6;
+
+          // Horizontal drift (wind effect) - rapid movement
+          float drift = sin(time * 2.5 + id * 6.28) * 0.15;
+          float driftSpeed = random(seed + vec2(4.0, 0.0)) * 0.12;
+
+          // Current position
+          float x = startX + drift + sin(time * 4.0 + id * 10.0) * driftSpeed;
+          float y = startY + time * fallSpeed;
+
+          // Loop confetti from bottom to top
+          y = mod(y, 1.3) - 0.15;
+          x = mod(x + 0.5, 1.0);
+
+          vec2 confettiPos = vec2(x, y);
+          vec2 diff = uv - confettiPos;
+
+          // Rotation with smooth animation - SUPER FAST rotation!
+          float rotSpeed = random(seed + vec2(5.0, 0.0)) * 12.0 - 6.0;
+          float angle = time * rotSpeed + id * 6.28;
+
+          // Rotate the difference vector
+          float cosA = cos(angle);
+          float sinA = sin(angle);
+          vec2 rotDiff = vec2(
+            diff.x * cosA - diff.y * sinA,
+            diff.x * sinA + diff.y * cosA
           );
 
-          float fade = smoothstep(3.0, 0.0, t);
-          gl_FragColor = vec4(color * confetti * fade, confetti * fade);
-        } else {
-          gl_FragColor = vec4(0.0);
+          // Confetti shape - rectangle
+          float aspectRatio = resolution.x / resolution.y;
+          float sizeX = 0.012;
+          float sizeY = 0.020;
+
+          // Add some size variation
+          float sizeVariation = 0.7 + random(seed + vec2(6.0, 0.0)) * 0.6;
+          sizeX *= sizeVariation;
+          sizeY *= sizeVariation;
+
+          // Smooth rectangle shape
+          float rectX = smoothstep(sizeX, sizeX * 0.8, abs(rotDiff.x));
+          float rectY = smoothstep(sizeY, sizeY * 0.8, abs(rotDiff.y));
+          float confettiShape = rectX * rectY;
+
+          // Vibrant colors - fixed per piece
+          vec3 color;
+          float colorId = random(seed + vec2(7.0, 0.0));
+
+          if(colorId < 0.16) {
+            color = vec3(1.0, 0.2, 0.3); // Red
+          } else if(colorId < 0.33) {
+            color = vec3(1.0, 0.8, 0.2); // Yellow
+          } else if(colorId < 0.5) {
+            color = vec3(0.2, 0.8, 1.0); // Blue
+          } else if(colorId < 0.66) {
+            color = vec3(0.3, 1.0, 0.4); // Green
+          } else if(colorId < 0.83) {
+            color = vec3(1.0, 0.4, 0.8); // Pink
+          } else {
+            color = vec3(0.7, 0.3, 1.0); // Purple
+          }
+
+          // Shimmer effect based on rotation
+          float shimmer = 0.7 + 0.3 * abs(sin(angle * 2.0));
+          color *= shimmer;
+
+          // Depth effect - pieces further away are dimmer
+          float depth = random(seed + vec2(8.0, 0.0));
+          float depthFade = 0.6 + depth * 0.4;
+
+          finalColor += color * confettiShape * depthFade;
         }
+
+        // Fade in at start and fade out at end - SUPER FAST!
+        float fadeIn = smoothstep(0.0, 0.15, time);
+        float fadeOut = smoothstep(2.5, 1.8, time);
+        float fade = fadeIn * fadeOut;
+
+        // Boost brightness
+        finalColor *= 1.5;
+
+        // Output with proper alpha - only show pixels where there's confetti
+        float alpha = min(1.0, length(finalColor)) * fade;
+        gl_FragColor = vec4(finalColor * fade, alpha);
       }
     `);
     gl.compileShader(fragmentShader);
+
+    // Check for shader compilation errors
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+      console.error('Fragment shader error:', gl.getShaderInfoLog(fragmentShader));
+      return;
+    }
 
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
+
+    // Check for linking errors
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program link error:', gl.getProgramInfoLog(program));
+      return;
+    }
+
     gl.useProgram(program);
 
     const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
@@ -399,19 +479,37 @@ function GameView({ stage, onComplete }) {
 
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
+    // Set viewport to full canvas size
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    // Disable depth testing (not needed for 2D)
+    gl.disable(gl.DEPTH_TEST);
+
+    // Enable blending for transparency with correct blend mode
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    // Set clear color to fully transparent
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+
     const startTime = Date.now();
     function render() {
       const currentTime = (Date.now() - startTime) / 1000;
+
+      // Clear with transparent background
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
       gl.uniform1f(timeLocation, currentTime);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      if (currentTime < 3.0) {
+      // Super short duration - 2.5 seconds
+      if (currentTime < 2.5) {
         requestAnimationFrame(render);
       } else {
         canvas.style.opacity = '0';
         setTimeout(() => {
           canvas.style.display = 'none';
-        }, 500);
+        }, 200);
       }
     }
     render();
@@ -433,39 +531,47 @@ function GameView({ stage, onComplete }) {
       <canvas id="confetti-canvas"></canvas>
 
       <div className="game-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button className="back-button" onClick={onComplete}>← Back</button>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: '700' }}>{stage.name}</h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button className="tutorial-button" onClick={handleShowTutorialAgain}>
-              ❓
-            </button>
-            <button className="hint-button" onClick={handleShowHint} disabled={showHint || isWon}>
-              💡 Hint
-            </button>
-            <div className={`difficulty-badge ${stage.mode}`}>
-              {stage.mode === 'easy' ? '2×2' : '3×3'}
-            </div>
-          </div>
-        </div>
+        <button className="back-button" onClick={onComplete}>← Back</button>
 
-        <div className="game-stats">
-          <div className="stat">
-            <div className={`stat-value ${time <= 10 ? 'time-warning' : ''}`}>
-              {formatTime(time)}
+        <div className="game-stats-row">
+          <div className="stat-compact">
+            <div className="stat-icon">⏱️</div>
+            <div>
+              <div className={`stat-value-compact ${time <= 10 ? 'time-warning' : ''}`}>
+                {formatTime(time)}
+              </div>
+              <div className="stat-label-compact">Time</div>
             </div>
-            <div className="stat-label">Time Remaining</div>
           </div>
-          <div className="stat">
-            <div className="stat-value">{moves}</div>
-            <div className="stat-label">Moves</div>
+          <div className="stat-compact">
+            <div className="stat-icon">🎯</div>
+            <div>
+              <div className="stat-value-compact">{moves}</div>
+              <div className="stat-label-compact">Moves</div>
+            </div>
           </div>
           {pb && (
-            <div className="stat">
-              <div className="stat-value">{formatTime(parseInt(pb))}</div>
-              <div className="stat-label">Best</div>
+            <div className="stat-compact">
+              <div className="stat-icon">🏆</div>
+              <div>
+                <div className="stat-value-compact">{formatTime(parseInt(pb))}</div>
+                <div className="stat-label-compact">Best</div>
+              </div>
             </div>
           )}
+        </div>
+
+        <div className="header-actions">
+          <button className="tutorial-button" onClick={handleShowTutorialAgain}>
+            ❓
+          </button>
+          <button
+            className="hint-button"
+            onClick={handleShowHint}
+            disabled={showHint || isWon || hintCount >= 2}
+          >
+            💡 Hint ({2 - hintCount})
+          </button>
         </div>
       </div>
 
@@ -512,7 +618,6 @@ function GameView({ stage, onComplete }) {
 
       {isWon && (
         <div className="win-modal">
-          <div className="win-emoji">🎉</div>
           <div className="win-title">Puzzle Complete!</div>
           <div className="win-stats">
             <div className="win-stat">
