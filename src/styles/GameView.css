@@ -2,27 +2,8 @@
   min-height: 100vh;
   background: #FDF9F1;
   padding: 0;
-  padding-bottom: 20vh;
+  padding-bottom: 200px;
   position: relative;
-}
-
-.game-view::after {
-  content: '';
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 600px;
-  height: 20vh;
-  max-height: 180px;
-  min-height: 120px;
-  background-image: url(/UI/game-bottom.jpg);
-  background-size: cover;
-  background-position: top center;
-  background-repeat: no-repeat;
-  z-index: 1;
-  pointer-events: none;
 }
 
 .game-header {
@@ -239,7 +220,72 @@
   font-weight: 700;
   color: #2d1810;
   margin-top: 20px;
-  margin-bottom: 0;
+  margin-bottom: 15px;
+}
+
+/* Shop Ticker Slider - Fixed to bottom */
+.shop-ticker {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  background: #FDF9F1;
+  padding: 15px 0;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shop-ticker-title {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d1810;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.shop-ticker-track {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.shop-ticker-items {
+  display: flex;
+  gap: 15px;
+  animation: ticker-scroll 20s linear infinite;
+  will-change: transform;
+}
+
+.shop-ticker-items:hover {
+  animation-play-state: paused;
+}
+
+.shop-item {
+  height: 100px;
+  width: auto;
+  flex-shrink: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.shop-item:hover {
+  transform: scale(1.05) translateY(-3px);
+  box-shadow: none;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .puzzle-grid {
@@ -707,13 +753,7 @@
 @media (max-width: 768px) {
   .game-view {
     padding: 0;
-    padding-bottom: 20vh;
-  }
-
-  .game-view::after {
-    height: 20vh;
-    max-height: 180px;
-    min-height: 120px;
+    padding-bottom: 180px;
   }
 
   .game-header {
@@ -800,13 +840,7 @@
 
 @media (max-width: 480px) {
   .game-view {
-    padding-bottom: 18vh;
-  }
-
-  .game-view::after {
-    height: 18vh;
-    max-height: 150px;
-    min-height: 100px;
+    padding-bottom: 160px;
   }
 
   .game-header {

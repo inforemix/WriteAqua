@@ -1,12 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import UploadModal from './UploadModal';
 import { getAssetPath } from '../utils/assets';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/MapView.css';
 
-function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, onStagesUpdate }) {
+function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, onStagesUpdate, onModeChange }) {
+  const { t } = useLanguage();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [draggedStageId, setDraggedStageId] = useState(null);
   const [dragOverStageId, setDragOverStageId] = useState(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Check if user has seen the tutorial
+    const hasSeenTutorial = localStorage.getItem('hasSeenMapTutorial');
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+      localStorage.setItem('hasSeenMapTutorial', 'true');
+    }
+  }, []);
 
   const filteredStages = stages.filter(s => s.mode === mode);
 
@@ -152,21 +164,24 @@ function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, on
               </svg>
             </div>
             <div className="progress-info">
-              <div className="progress-label">Progress</div>
+              <div className="progress-label">{mode === 'easy' ? t('easy') : t('hard')}</div>
               <div className="progress-numbers">
-                {completedCount} / {totalStages} Stages
+                {completedCount} / {totalStages} {t('stages')}
               </div>
             </div>
           </div>
         )}
-        <div className="mode-title">
-          {mode === 'easy' ? '🌟 Easy Mode' : '🔥 Hard Mode'}
-        </div>
+        <img
+          src={getAssetPath(mode === 'easy' ? 'UI/Light Wood-hard.png' : 'UI/Light Wood-easy.png')}
+          alt={mode === 'easy' ? t('switchToHard') : t('switchToEasy')}
+          className="mode-toggle-button"
+          onClick={() => onModeChange(mode === 'easy' ? 'hard' : 'easy')}
+        />
       </div>
 
       {isAdmin && (
         <button className="floating-add-button" onClick={handleAddStage}>
-          + Add Stage
+          {t('addStage')}
         </button>
       )}
 
@@ -324,8 +339,8 @@ function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, on
         {filteredStages.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">🗺️</div>
-            <h3>No Stages Yet</h3>
-            <p>{isAdmin ? 'Click "+ Add" to create one!' : 'Ask admin to add stages!'}</p>
+            <h3>{t('noStagesYet')}</h3>
+            <p>{isAdmin ? t('noStagesAdmin') : t('noStagesUser')}</p>
           </div>
         ) : (
           filteredStages.map((stage, index) => {
@@ -379,7 +394,7 @@ function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, on
                 {isAdmin && (
                   <div className="admin-controls">
                     <button className="delete-button" onClick={() => onDeleteStage(stage.id)}>
-                      🗑️ Delete
+                      🗑️ {t('delete')}
                     </button>
                   </div>
                 )}
@@ -395,6 +410,37 @@ function MapView({ mode, stages, isAdmin, onBack, onPlayStage, onDeleteStage, on
           onClose={() => setShowUploadModal(false)}
           onSave={handleSaveStage}
         />
+      )}
+
+      {showTutorial && (
+        <div className="tutorial-overlay" onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-modal" onClick={e => e.stopPropagation()}>
+            <div className="tutorial-header">
+              <h2 className="tutorial-title">🎮 {t('howToPlay')}</h2>
+              <button className="close-button" onClick={() => setShowTutorial(false)}>×</button>
+            </div>
+            <div className="tutorial-content">
+              <div className="tutorial-section">
+                <div className="tutorial-icon">🔄</div>
+                <h3>{t('rotateSwap')}</h3>
+                <p>{t('rotateSwapDesc')}</p>
+              </div>
+              <div className="tutorial-section">
+                <div className="tutorial-icon">🎯</div>
+                <h3>{t('completeBeforeTime')}</h3>
+                <p>{t('completeBeforeTimeDesc')}</p>
+              </div>
+              <div className="tutorial-section">
+                <div className="tutorial-icon">💡</div>
+                <h3>{t('useHints')}</h3>
+                <p>{t('useHintsDesc')}</p>
+              </div>
+            </div>
+            <button className="tutorial-start-button" onClick={() => setShowTutorial(false)}>
+              {t('letsPlay')}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

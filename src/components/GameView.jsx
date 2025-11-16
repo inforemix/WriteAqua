@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import '../styles/GameView.css';
 import { soundManager } from '../utils/sounds';
 import { getAssetPath } from '../utils/assets';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function GameView({ stage, onComplete }) {
+  const { t } = useLanguage();
   const [pieces, setPieces] = useState([]);
   const [moves, setMoves] = useState(0);
   const [time, setTime] = useState(stage.mode === 'easy' ? 30 : 60);
@@ -22,12 +24,6 @@ function GameView({ stage, onComplete }) {
   const isDraggable = true; // Enable drag-drop for both modes
 
   useEffect(() => {
-    // Check if user has seen tutorial
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
-    if (!hasSeenTutorial) {
-      setShowTutorial(true);
-    }
-
     initializePuzzle();
 
     // Show hint for 3 seconds before starting the timer
@@ -258,7 +254,6 @@ function GameView({ stage, onComplete }) {
 
   const handleCloseTutorial = () => {
     setShowTutorial(false);
-    localStorage.setItem('hasSeenTutorial', 'true');
   };
 
   const handleShowTutorialAgain = () => {
@@ -543,14 +538,14 @@ function GameView({ stage, onComplete }) {
               <div className={`stat-value-compact ${time <= 10 ? 'time-warning' : ''}`}>
                 {formatTime(time)}
               </div>
-              <div className="stat-label-compact">Time</div>
+              <div className="stat-label-compact">{t('time')}</div>
             </div>
           </div>
           <div className="stat-compact">
             <div className="stat-icon">🎯</div>
             <div>
               <div className="stat-value-compact">{moves}</div>
-              <div className="stat-label-compact">Moves</div>
+              <div className="stat-label-compact">{t('moves')}</div>
             </div>
           </div>
           {pb && (
@@ -558,7 +553,7 @@ function GameView({ stage, onComplete }) {
               <div className="stat-icon">🏆</div>
               <div>
                 <div className="stat-value-compact">{formatTime(parseInt(pb))}</div>
-                <div className="stat-label-compact">Best</div>
+                <div className="stat-label-compact">{t('best')}</div>
               </div>
             </div>
           )}
@@ -573,7 +568,7 @@ function GameView({ stage, onComplete }) {
             onClick={handleShowHint}
             disabled={showHint || isWon || hintCount >= 2}
           >
-            <img src={getAssetPath('UI/hint-btn.png')} alt="Hint" className="hint-icon" />
+            <img src={getAssetPath('UI/hint-btn.png')} alt={t('hint')} className="hint-icon" />
             <span>{2 - hintCount}</span>
           </button>
         </div>
@@ -624,33 +619,33 @@ function GameView({ stage, onComplete }) {
 
       {isWon && (
         <div className="win-modal">
-          <div className="win-title">Puzzle Complete!</div>
+          <div className="win-title">{t('puzzleComplete')}</div>
           <div className="win-stats">
             <div className="win-stat">
               <div className="win-stat-value">{formatTime(time)}</div>
-              <div className="win-stat-label">Time Remaining</div>
+              <div className="win-stat-label">{t('timeRemaining')}</div>
             </div>
             <div className="win-stat">
               <div className="win-stat-value">{moves}</div>
-              <div className="win-stat-label">Moves</div>
+              <div className="win-stat-label">{t('moves')}</div>
             </div>
           </div>
-          {isNewPB && <div className="pb-indicator">🏆 New Personal Best!</div>}
-          <button className="win-button" onClick={onComplete}>Continue</button>
+          {isNewPB && <div className="pb-indicator">🏆 {t('newPersonalBest')}</div>}
+          <button className="win-button" onClick={onComplete}>{t('continue')}</button>
         </div>
       )}
 
       {timeExpired && (
         <div className="time-expired-modal">
           <div className="time-expired-emoji">⏰</div>
-          <div className="time-expired-title">Time&apos;s Up!</div>
-          <p className="time-expired-text">Don&apos;t worry, let&apos;s try again!</p>
+          <div className="time-expired-title">{t('timesUp')}</div>
+          <p className="time-expired-text">{t('timesUpMessage')}</p>
           <div className="time-expired-actions">
             <button className="restart-button" onClick={handleRestartPuzzle}>
-              🔄 Restart Puzzle
+              🔄 {t('restartPuzzle')}
             </button>
             <button className="back-button-modal" onClick={onComplete}>
-              ← Back to Map
+              ← {t('backToMap')}
             </button>
           </div>
         </div>
@@ -660,42 +655,54 @@ function GameView({ stage, onComplete }) {
         <div className="tutorial-overlay" onClick={handleCloseTutorial}>
           <div className="tutorial-modal" onClick={e => e.stopPropagation()}>
             <div className="tutorial-header">
-              <h2 className="tutorial-title">🎮 How to Play</h2>
+              <h2 className="tutorial-title">🎮 {t('howToPlay')}</h2>
               <button className="close-button" onClick={handleCloseTutorial}>×</button>
             </div>
             <div className="tutorial-content">
               <div className="tutorial-section">
                 <div className="tutorial-icon">🔄</div>
-                <h3>Rotate Pieces</h3>
-                <p>Click on any puzzle piece to rotate it 90° clockwise</p>
-              </div>
-              <div className="tutorial-section">
-                <div className="tutorial-icon">🔀</div>
-                <h3>Swap Positions</h3>
-                <p>Drag and drop pieces to swap their positions</p>
+                <h3>{t('rotateSwap')}</h3>
+                <p>{t('rotateSwapDesc')}</p>
               </div>
               <div className="tutorial-section">
                 <div className="tutorial-icon">🎯</div>
-                <h3>Complete the Puzzle</h3>
-                <p>Match all pieces to their correct positions and rotations</p>
-              </div>
-              <div className="tutorial-section">
-                <div className="tutorial-icon">⏱️</div>
-                <h3>Beat the Clock</h3>
-                <p>Easy: 30 seconds | Hard: 60 seconds</p>
+                <h3>{t('completeBeforeTime')}</h3>
+                <p>{t('completeBeforeTimeDesc')}</p>
               </div>
               <div className="tutorial-section">
                 <div className="tutorial-icon">💡</div>
-                <h3>Use Hints</h3>
-                <p>Click the hint button to see the complete image for 3 seconds</p>
+                <h3>{t('useHints')}</h3>
+                <p>{t('useHintsDesc')}</p>
               </div>
             </div>
             <button className="tutorial-start-button" onClick={handleCloseTutorial}>
-              Let&apos;s Play! 🚀
+              {t('letsPlay')}
             </button>
           </div>
         </div>
       )}
+
+      {/* Shop Items Ticker Slider at bottom */}
+      <div className="shop-ticker">
+        <div className="shop-ticker-track">
+          <div className="shop-ticker-items">
+            <img src={getAssetPath('puzzles/shop/tool1.jpg')} alt="Tool 1" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool2.jpg')} alt="Tool 2" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool3.jpg')} alt="Tool 3" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool4.jpg')} alt="Tool 4" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool5.jpg')} alt="Tool 5" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool6.jpg')} alt="Tool 6" className="shop-item" />
+            {/* Duplicate for seamless loop */}
+            <img src={getAssetPath('puzzles/shop/tool1.jpg')} alt="Tool 1" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool2.jpg')} alt="Tool 2" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool3.jpg')} alt="Tool 3" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool4.jpg')} alt="Tool 4" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool5.jpg')} alt="Tool 5" className="shop-item" />
+            <img src={getAssetPath('puzzles/shop/tool6.jpg')} alt="Tool 6" className="shop-item" />
+          </div>
+        </div>
+        <div className="shop-ticker-title">{t('specialTools')}</div>
+      </div>
     </div>
   );
 }

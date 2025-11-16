@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import HomePage from './components/HomePage';
 import MapView from './components/MapView';
 import GameView from './components/GameView';
+import { defaultStages } from './data/preloadStages';
+import { LanguageProvider } from './contexts/LanguageContext';
 import './styles/App.css';
 
 function App() {
@@ -15,6 +17,10 @@ function App() {
     const saved = localStorage.getItem('stages');
     if (saved) {
       setStages(JSON.parse(saved));
+    } else {
+      // Load default stages if nothing is saved
+      setStages(defaultStages);
+      localStorage.setItem('stages', JSON.stringify(defaultStages));
     }
   }, []);
 
@@ -26,6 +32,10 @@ function App() {
   const handleModeSelect = (mode) => {
     setSelectedMode(mode);
     setScreen('map');
+  };
+
+  const handleModeChange = (mode) => {
+    setSelectedMode(mode);
   };
 
   const handlePlayStage = (stage) => {
@@ -46,34 +56,37 @@ function App() {
   };
 
   return (
-    <div className="app">
-      {screen === 'home' && (
-        <HomePage
-          isAdmin={isAdmin}
-          setIsAdmin={setIsAdmin}
-          onModeSelect={handleModeSelect}
-        />
-      )}
+    <LanguageProvider>
+      <div className="app">
+        {screen === 'home' && (
+          <HomePage
+            isAdmin={isAdmin}
+            setIsAdmin={setIsAdmin}
+            onModeSelect={handleModeSelect}
+          />
+        )}
 
-      {screen === 'map' && (
-        <MapView
-          mode={selectedMode}
-          stages={stages}
-          isAdmin={isAdmin}
-          onBack={() => setScreen('home')}
-          onPlayStage={handlePlayStage}
-          onDeleteStage={handleDeleteStage}
-          onStagesUpdate={saveStages}
-        />
-      )}
+        {screen === 'map' && (
+          <MapView
+            mode={selectedMode}
+            stages={stages}
+            isAdmin={isAdmin}
+            onBack={() => setScreen('home')}
+            onPlayStage={handlePlayStage}
+            onDeleteStage={handleDeleteStage}
+            onStagesUpdate={saveStages}
+            onModeChange={handleModeChange}
+          />
+        )}
 
-      {screen === 'game' && currentStage && (
-        <GameView
-          stage={currentStage}
-          onComplete={handleGameComplete}
-        />
-      )}
-    </div>
+        {screen === 'game' && currentStage && (
+          <GameView
+            stage={currentStage}
+            onComplete={handleGameComplete}
+          />
+        )}
+      </div>
+    </LanguageProvider>
   );
 }
 

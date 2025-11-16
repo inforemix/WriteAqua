@@ -2,14 +2,22 @@ import { useState } from 'react';
 import '../styles/HomePage.css';
 import { soundManager } from '../utils/sounds';
 import { getAssetPath } from '../utils/assets';
+import { useLanguage } from '../contexts/LanguageContext';
 import SettingsMenu from './SettingsMenu';
 
 function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
+  const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleModeSelect = (mode) => {
+  const handlePlayClick = () => {
     soundManager.playClick();
-    onModeSelect(mode);
+    // Default to Easy mode when clicking Play
+    onModeSelect('easy');
+  };
+
+  const handleShopClick = () => {
+    soundManager.playClick();
+    alert('Shop coming soon!');
   };
 
   return (
@@ -21,28 +29,28 @@ function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
 
         <div className="button-stack">
           <img
-            src={getAssetPath('UI/Light Wood-easy.png')}
-            alt="Easy"
+            src={getAssetPath('UI/Play.png')}
+            alt="Play"
             className="wood-button clickable"
-            onClick={() => handleModeSelect('easy')}
+            onClick={handlePlayClick}
           />
           <img
-            src={getAssetPath('UI/Light Wood-hard.png')}
-            alt="Hard"
+            src={getAssetPath('UI/shop.png')}
+            alt="Shop"
             className="wood-button clickable"
-            onClick={() => handleModeSelect('hard')}
+            onClick={handleShopClick}
           />
         </div>
       </div>
 
-      <div className="version-badge">v0.2</div>
+      <div className="version-badge">v0.3</div>
 
       <button
         className="settings-button"
         onClick={() => setShowSettings(true)}
-        title="Settings"
+        title={t('settings')}
       >
-        <img src={getAssetPath('UI/setting.png')} alt="Settings" className="button-icon" />
+        <img src={getAssetPath('UI/setting.png')} alt={t('settings')} className="button-icon" />
       </button>
 
       <SettingsMenu

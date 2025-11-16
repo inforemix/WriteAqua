@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import '../styles/SettingsMenu.css';
 import { soundManager } from '../utils/sounds';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
+  const { language, changeLanguage, t } = useLanguage();
   const [volume, setVolume] = useState(soundManager.volume * 100);
   const [soundEnabled, setSoundEnabled] = useState(soundManager.enabled);
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('language') || 'en';
-  });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Sync state when menu opens
@@ -35,9 +34,7 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
   };
 
   const handleLanguageChange = (lang) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
-    // In a real app, this would trigger i18n language change
+    changeLanguage(lang);
   };
 
   const handleResetProgress = () => {
@@ -45,11 +42,11 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
   };
 
   const confirmResetProgress = () => {
-    // Remove all completed stage data and personal bests
+    // Remove ALL game data including stages, completed status, and personal bests
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key.startsWith('completed-') || key.startsWith('pb-')) {
+      if (key.startsWith('completed-') || key.startsWith('pb-') || key === 'stages') {
         keysToRemove.push(key);
       }
     }
@@ -77,18 +74,18 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
     <div className="settings-overlay" onClick={onClose}>
       <div className="settings-menu" onClick={(e) => e.stopPropagation()}>
         <div className="settings-header">
-          <h2 className="settings-title">Settings</h2>
+          <h2 className="settings-title">{t('settingsTitle')}</h2>
           <button className="settings-close" onClick={onClose}>×</button>
         </div>
 
         <div className="settings-content">
           {/* Mode Section */}
           <div className="settings-section">
-            <h3 className="section-title">Mode</h3>
+            <h3 className="section-title">{t('adminMode')}</h3>
 
             <div className="setting-item">
               <label className="setting-label">
-                <span>{isAdmin ? '🔐 Admin Mode' : '👤 Player Mode'}</span>
+                <span>{isAdmin ? '🔐 ' + t('adminMode') : '👤 ' + t('adminMode')}</span>
                 <button
                   className={`toggle-switch ${isAdmin ? 'active' : ''}`}
                   onClick={() => setIsAdmin(!isAdmin)}
@@ -97,16 +94,17 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
                   <span className="toggle-slider"></span>
                 </button>
               </label>
+              <p className="setting-description">{t('adminModeDesc')}</p>
             </div>
           </div>
 
           {/* Sound Section */}
           <div className="settings-section">
-            <h3 className="section-title">Sound</h3>
+            <h3 className="section-title">{t('soundEffects')}</h3>
 
             <div className="setting-item">
               <label className="setting-label">
-                <span>Enable Sound</span>
+                <span>{t('soundEffects')}</span>
                 <button
                   className={`toggle-switch ${soundEnabled ? 'active' : ''}`}
                   onClick={handleSoundToggle}
@@ -115,59 +113,46 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
                   <span className="toggle-slider"></span>
                 </button>
               </label>
-            </div>
-
-            <div className="setting-item">
-              <label className="setting-label">
-                <span>Volume</span>
-                <span className="volume-value">{Math.round(volume)}%</span>
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volume}
-                onChange={handleVolumeChange}
-                disabled={!soundEnabled}
-                className="volume-slider"
-                style={{ '--value': `${volume}%` }}
-              />
+              <p className="setting-description">{t('soundEffectsDesc')}</p>
             </div>
           </div>
 
-          {/* Language Section */}
-          <div className="settings-section">
-            <h3 className="section-title">Language</h3>
+          {/* Language Section - Hidden for MVP */}
+          {false && (
+            <div className="settings-section">
+              <h3 className="section-title">{t('language')}</h3>
+              <p className="setting-description">{t('languageDesc')}</p>
 
-            <div className="language-options">
-              <button
-                className={`language-btn ${language === 'en' ? 'active' : ''}`}
-                onClick={() => handleLanguageChange('en')}
-              >
-                <span className="language-flag">🇺🇸</span>
-                <span className="language-name">English</span>
-              </button>
+              <div className="language-options">
+                <button
+                  className={`language-btn ${language === 'en' ? 'active' : ''}`}
+                  onClick={() => handleLanguageChange('en')}
+                >
+                  <span className="language-flag">🇺🇸</span>
+                  <span className="language-name">{t('english')}</span>
+                </button>
 
-              <button
-                className={`language-btn ${language === 'zh-tw' ? 'active' : ''}`}
-                onClick={() => handleLanguageChange('zh-tw')}
-              >
-                <span className="language-flag">🇹🇼</span>
-                <span className="language-name">繁體中文</span>
-              </button>
+                <button
+                  className={`language-btn ${language === 'es' ? 'active' : ''}`}
+                  onClick={() => handleLanguageChange('es')}
+                >
+                  <span className="language-flag">🇪🇸</span>
+                  <span className="language-name">{t('spanish')}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Admin Section - Reset Progress */}
           {isAdmin && (
             <div className="settings-section danger-section">
-              <h3 className="section-title">Admin Actions</h3>
+              <h3 className="section-title">{t('resetProgress')}</h3>
 
               <div className="setting-item">
                 <button className="reset-progress-btn" onClick={handleResetProgress}>
-                  🗑️ Reset All Progress
+                  🗑️ {t('resetProgressBtn')}
                 </button>
-                <p className="reset-warning">This will clear all completed stages and personal bests</p>
+                <p className="reset-warning">{t('resetProgressDesc')}</p>
               </div>
             </div>
           )}
@@ -178,17 +163,16 @@ function SettingsMenu({ isOpen, onClose, isAdmin, setIsAdmin }) {
           <div className="confirm-overlay">
             <div className="confirm-modal">
               <div className="confirm-icon">⚠️</div>
-              <h3 className="confirm-title">Reset All Progress?</h3>
+              <h3 className="confirm-title">{t('resetProgressBtn')}</h3>
               <p className="confirm-text">
-                This will permanently delete all completed stages and personal best times.
-                This action cannot be undone.
+                {t('confirmReset')}
               </p>
               <div className="confirm-actions">
                 <button className="confirm-cancel" onClick={cancelResetProgress}>
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button className="confirm-delete" onClick={confirmResetProgress}>
-                  Reset Progress
+                  {t('resetProgress')}
                 </button>
               </div>
             </div>
