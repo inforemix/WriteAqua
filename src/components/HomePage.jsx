@@ -4,10 +4,12 @@ import { soundManager } from '../utils/sounds';
 import { getAssetPath } from '../utils/assets';
 import { useLanguage } from '../contexts/LanguageContext';
 import SettingsMenu from './SettingsMenu';
+import VideoModal from './VideoModal';
 
 function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
   const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Start background music on mount
   useEffect(() => {
@@ -20,9 +22,9 @@ function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
     onModeSelect('easy');
   };
 
-  const handleShopClick = () => {
+  const handleStoryClick = () => {
     soundManager.playClick();
-    alert('Shop coming soon!');
+    setShowVideo(true);
   };
 
   return (
@@ -40,10 +42,10 @@ function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
             onClick={handlePlayClick}
           />
           <img
-            src={getAssetPath('UI/shop.png')}
-            alt="Shop"
+            src={getAssetPath('UI/story.png')}
+            alt="Story"
             className="wood-button clickable"
-            onClick={handleShopClick}
+            onClick={handleStoryClick}
           />
         </div>
       </div>
@@ -63,6 +65,12 @@ function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
         onClose={() => setShowSettings(false)}
         isAdmin={isAdmin}
         setIsAdmin={setIsAdmin}
+      />
+
+      <VideoModal
+        isOpen={showVideo}
+        onClose={() => setShowVideo(false)}
+        videoUrl="https://youtu.be/llbuZV0ft6Y?si=S9rzM5wgr3194kkh"
       />
     </div>
   );

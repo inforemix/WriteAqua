@@ -1,0 +1,182 @@
+/* Text-based Button Styles for Localization */
+
+/* Back Button - Beige/Tan Style */
+.text-button-back {
+  box-sizing: border-box;
+  position: absolute;
+  width: 88px;
+  height: 38px;
+  left: 36px;
+  top: 19px;
+
+  font-family: '210 Dongwhacaek', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 38px;
+  line-height: 100%;
+  display: flex;
+  align-items: center;
+
+  color: #FBE1F;
+
+  border: 2px solid #553C00;
+  text-shadow: 0px -2px 2px rgba(0, 0, 0, 0.25);
+
+  background: #DCD69E;
+  border-radius: 15.5346px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.text-button-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: #E5DFB0;
+}
+
+.text-button-back:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Play/Shop Button - Yellow/Gold Style */
+.text-button-primary {
+  box-sizing: border-box;
+  position: relative;
+  width: 121.79px;
+  height: 48px;
+
+  font-family: 'GROBOLD', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 48px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 63.89%), #FFD910;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+
+  border: 5.625px solid #5B3618;
+  text-shadow: 0px 1.00025px 2.0005px rgba(0, 0, 0, 0.25);
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 12px;
+}
+
+.text-button-primary:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+
+.text-button-primary:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  filter: brightness(0.95);
+}
+
+/* Standalone styles (for HomePage buttons stack) */
+.wood-button-text {
+  width: 300px;
+  height: 80px;
+
+  background-image: url(/UI/LightWoodpanel.png);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3));
+}
+
+.wood-button-text span {
+  position: absolute;
+  width: 121.79px;
+  height: 48px;
+  left: calc(50% - 121.79px/2 - 0.1px);
+  top: calc(50% - 48px/2 - 0.5px);
+
+  font-family: 'GROBOLD';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 48px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 63.89%), #FFD910;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+
+  border: 5px solid #583618;
+  text-shadow: 0px 1.00025px 2.0005px rgba(0, 0, 0, 0.25);
+}
+
+.wood-button-text:hover {
+  transform: translateY(-5px) scale(1.05);
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5)) brightness(1.15);
+}
+
+.wood-button-text:active {
+  transform: translateY(2px) scale(0.98);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)) brightness(0.95);
+}
+
+/* Responsive adjustments */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .wood-button-text {
+    width: 280px;
+    height: 75px;
+  }
+
+  .wood-button-text span {
+    font-size: 44px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .wood-button-text {
+    width: 240px;
+    height: 65px;
+  }
+
+  .wood-button-text span {
+    font-size: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wood-button-text {
+    width: 200px;
+    height: 55px;
+  }
+
+  .wood-button-text span {
+    font-size: 32px;
+  }
+}

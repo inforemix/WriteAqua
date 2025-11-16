@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Puzzle Quest is a React-based puzzle game featuring map-based progression, two difficulty modes (Easy: 2×2 grid, Hard: 3×3 grid), and an admin mode for creating custom stages. The game uses Canvas API for image slicing, WebGL shaders for confetti effects, and localStorage for data persistence.
+Write Quest is a React-based puzzle game featuring map-based progression, two difficulty modes (Easy: 2×2 grid, Hard: 3×3 grid), and an admin mode for creating custom stages. The game uses Canvas API for image slicing, WebGL shaders for confetti effects, and localStorage for data persistence.
 
 ## Development Commands
 

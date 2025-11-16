@@ -1,5 +1,5 @@
 {
-  "name": "puzzle-quest-map",
+  "name": "write-quest-map",
   "version": "0.3.0",
   "description": "A beautiful puzzle game with map-based progression and multiple difficulty levels",
   "type": "module",

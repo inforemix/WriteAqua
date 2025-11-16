@@ -2,6 +2,7 @@ export const translations = {
   en: {
     // HomePage
     settings: 'Settings',
+    play: 'Play',
     shop: 'Shop',
 
     // MapView
@@ -74,6 +75,7 @@ export const translations = {
   es: {
     // HomePage
     settings: 'Ajustes',
+    play: 'Jugar',
     shop: 'Tienda',
 
     // MapView

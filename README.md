@@ -1,8 +1,8 @@
-# 🎮 Puzzle Quest - Map Edition
+# 🎮 Write Quest - Map Edition
 
 A beautiful, interactive puzzle game built with React featuring map-based progression, multiple difficulty levels, and stunning visual effects.
 
-![Puzzle Quest](https://img.shields.io/badge/React-18.2-blue)
+![Write Quest](https://img.shields.io/badge/React-18.2-blue)
 ![Vite](https://img.shields.io/badge/Vite-5.0-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -200,4 +200,4 @@ For questions or support, please open an issue in the repository.
 
 ---
 
-**Enjoy playing Puzzle Quest!** 🎉
+**Enjoy playing Write Quest!** 🎉
