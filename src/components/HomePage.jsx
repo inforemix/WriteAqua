@@ -56,7 +56,7 @@ function HomePage({ isAdmin, setIsAdmin, onModeSelect }) {
         </div>
       </div>
 
-      <div className="version-badge">v0.3</div>
+      <div className="version-badge">v0.4</div>
 
       <button
         className="settings-button"

@@ -331,7 +331,9 @@ class SoundManager {
 
       // Create audio element if not exists
       if (!this.backgroundMusic) {
-        this.backgroundMusic = new Audio('/WAqua-music.mp3');
+        // Use dynamic import to get base URL for production builds
+        const musicPath = import.meta.env.BASE_URL + 'WAqua-music.mp3';
+        this.backgroundMusic = new Audio(musicPath);
         this.backgroundMusic.loop = true;
 
         // Create gain node for volume control

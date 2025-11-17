@@ -20,10 +20,12 @@ function GameView({ stage, onComplete }) {
   const [timeExpired, setTimeExpired] = useState(false);
   const [justDropped, setJustDropped] = useState(false);
   const [hintCount, setHintCount] = useState(0);
+  const [touchDragTarget, setTouchDragTarget] = useState(null);
   const timerRef = useRef();
   const hintTimerRef = useRef();
   const hintCountdownRef = useRef();
   const dropTimeoutRef = useRef();
+  const touchStartPos = useRef({ x: 0, y: 0 });
   const gridSize = stage.mode === 'easy' ? 2 : 3;
   const isDraggable = true; // Enable drag-drop for both modes
   const moveLimit = stage.mode === 'hard' ? 30 : null; // Hard mode has 30 move limit
@@ -298,6 +300,83 @@ function GameView({ stage, onComplete }) {
     setDraggedFromIndex(null);
 
     // Also set justDropped flag in case drop didn't fire
+    setJustDropped(true);
+    if (dropTimeoutRef.current) {
+      clearTimeout(dropTimeoutRef.current);
+    }
+    dropTimeoutRef.current = setTimeout(() => {
+      setJustDropped(false);
+    }, 200);
+  };
+
+  // Touch event handlers for mobile support
+  const handleTouchStart = (e, index, visualIndex) => {
+    if (!isDraggable) return;
+
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+
+    // Don't set drag state immediately - wait for movement
+    // This allows taps to still register as clicks for rotation
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDraggable) return;
+
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
+
+    // Only start dragging if moved more than 10px (prevents accidental drags on taps)
+    if (deltaX > 10 || deltaY > 10) {
+      // Now we know it's a drag, not a tap
+      e.preventDefault(); // Prevent scrolling
+
+      // Get the piece being dragged from the touch target
+      if (draggedPiece === null) {
+        const target = e.target;
+        if (target.classList.contains('puzzle-piece')) {
+          const index = parseInt(target.dataset.currentIndex);
+          const visualIndex = Array.from(target.parentElement.children).indexOf(target);
+          setDraggedPiece(index);
+          setDraggedFromIndex(visualIndex);
+        }
+      }
+
+      setTouchDragTarget({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (draggedPiece === null) {
+      // This was a tap, not a drag - let the click handler deal with it
+      return;
+    }
+
+    e.preventDefault();
+
+    const touch = e.changedTouches[0];
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    // Find the closest puzzle piece element
+    let puzzlePiece = targetElement;
+    while (puzzlePiece && !puzzlePiece.classList.contains('puzzle-piece')) {
+      puzzlePiece = puzzlePiece.parentElement;
+    }
+
+    if (puzzlePiece) {
+      // Get the index from the piece
+      const targetIndex = parseInt(puzzlePiece.dataset.currentIndex);
+      if (!isNaN(targetIndex) && targetIndex !== draggedPiece) {
+        handleDrop(targetIndex);
+      }
+    }
+
+    // Reset drag state
+    setDraggedPiece(null);
+    setDraggedFromIndex(null);
+    setTouchDragTarget(null);
+
     setJustDropped(true);
     if (dropTimeoutRef.current) {
       clearTimeout(dropTimeoutRef.current);
@@ -682,12 +761,16 @@ function GameView({ stage, onComplete }) {
                   transform: isBeingDragged ? 'scale(1.15)' : `rotate(${piece.displayRotation}deg)`,
                   transition: isBeingDragged ? 'none' : undefined
                 }}
+                data-current-index={piece.currentIndex}
                 onClick={(e) => handleRotate(piece.originalIndex, e)}
                 draggable={isDraggable}
                 onDragStart={() => handleDragStart(piece.currentIndex, index)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(piece.currentIndex)}
                 onDragEnd={handleDragEnd}
+                onTouchStart={(e) => handleTouchStart(e, piece.currentIndex, index)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               />
             );
           })}
