@@ -859,6 +859,18 @@
     height: 80px;
   }
 
+  /* Keep back button in nav bar on mobile (different from MapView) */
+  .back-button {
+    position: absolute;
+    left: 10px;
+    top: auto;
+    padding: 0;
+    margin: 0;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
   .back-icon {
     height: 40px;
     content: var(--mobile-bk);
